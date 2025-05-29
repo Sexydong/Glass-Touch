@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-DPR">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정동윤 게임즈 - 멀티 게임!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #6B778D 0%, #3E4A5F 100%); 
+            margin: 0;
+            overflow: hidden; 
+            touch-action: manipulation; 
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            display: none; 
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            position: absolute; 
+            top: 0;
+            left: 0;
+            opacity: 0; 
+            transition: opacity 0.5s ease-in-out; 
+        }
+
+        .screen.active {
+            display: flex; 
+            opacity: 1; 
+        }
+
+        /* --- 닉네임 설정 화면 스타일 --- */
+        #nicknameSetupScreen {
+            background: linear-gradient(145deg, #3E4A5F 0%, #2C3E50 100%);
+            color: white;
+        }
+        .setup-container {
+            text-align: center;
+            animation: fadeInSlideUp 0.8s ease-out forwards;
+        }
+        @keyframes fadeInSlideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .setup-logo { 
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            opacity: 0; 
+            animation: appleHelloAnimation 1.2s 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+        }
+        @keyframes appleHelloAnimation { 
+            0% { opacity: 0; transform: translateY(25px) scale(0.7) rotate(-10deg); }
+            30% { opacity: 0.6; transform: translateY(-8px) scale(1.05) rotate(5deg); }
+            60% { opacity: 1; transform: translateY(2px) scale(0.95) rotate(-2deg); }
+            100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+        }
+        .setup-welcome {
+            font-size: 1.5rem;
+            margin-bottom: 20px; 
+            animation: textAppear 1s 1s ease-out forwards; 
+            opacity: 0;
+        }
+        @keyframes textAppear {
+            to { opacity: 1; }
+        }
+        #nicknameInput {
+            width: 80%;
+            max-width: 300px;
+            padding: 15px;
+            margin-bottom: 15px; 
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            text-align: center;
+            background-color: rgba(255,255,255,0.9);
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            animation: inputAppear 1s 1.5s ease-out forwards; 
+            opacity: 0;
+        }
+        @keyframes inputAppear {
+            to { opacity: 1; }
+        }
+        .nickname-buttons-container { 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px; 
+            animation: buttonAppear 1s 2s ease-out forwards; 
+            opacity: 0;
+        }
+         @keyframes buttonAppear {
+            to { opacity: 1; }
+        }
+        #confirmNicknameButton, #suggestNicknameButton {
+            color: white;
+            font-size: 1.1rem; 
+            font-weight: 600;
+            padding: 12px 25px; 
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease-out;
+            width: 80%;
+            max-width: 250px; 
+        }
+        #confirmNicknameButton {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        #suggestNicknameButton { 
+            background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+            box-shadow: 0 5px 15px rgba(247, 151, 30, 0.3);
+        }
+        #confirmNicknameButton:hover, #suggestNicknameButton:hover { transform: translateY(-2px); }
+        #confirmNicknameButton:active, #suggestNicknameButton:active { transform: translateY(0px); }
+        
+        #nicknameSuggestions {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #e0e0e0;
+            min-height: 20px; 
+        }
+        #nicknameSuggestions button {
+            background-color: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            padding: 5px 10px;
+            margin: 3px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #nicknameSuggestions button:hover {
+            background-color: rgba(255,255,255,0.4);
+        }
+        .loading-indicator {
+            font-size: 0.9rem;
+            margin-top: 10px;
+            display: none; 
+        }
+
+
+        /* --- 홈 화면 스타일 --- */
+        #homeScreen {
+             background: linear-gradient(135deg, #b0bec5 0%, #78909c 100%);
+        }
+        .home-content {
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.35); 
+            backdrop-filter: blur(16px); 
+            border-radius: 28px; 
+            padding: 25px 40px; /* 패딩 조정 */
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15), 
+                        inset 0 1px 1px rgba(255, 255, 255, 0.2), 
+                        0 0 0 1.5px rgba(255, 255, 255, 0.25); 
+            width: 90%;
+            max-width: 500px; 
+        }
+        .app-title { 
+            font-size: 2.2rem; 
+            font-weight: 700; 
+            margin-bottom: 8px; /* 간격 조정 */
+            color: #1A202C;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.1);
+        }
+        .app-subtitle { font-size: 1.1rem; margin-bottom: 15px; color: #374151; } /* 간격 조정 */
+        .game-selection-buttons { display: flex; flex-direction: column; gap: 12px; align-items: center; margin-bottom: 15px;} /* 간격 조정 */
+        .game-select-button { 
+            color: white; font-size: 1.1rem; font-weight: 600; padding: 10px 20px; 
+            border: none; border-radius: 12px; cursor: pointer; transition: all 0.2s ease-out;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2); outline: none; background-size: 200% 200%; 
+            animation: rainbowMove 4s ease infinite; -webkit-tap-highlight-color: transparent;
+            width: 90%; max-width: 280px;
+        }
+        .game-select-button:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 10px 20px rgba(0,0,0,0.25); }
+        .game-select-button:active { transform: translateY(1px) scale(0.98); box-shadow: 0 3px 6px rgba(0,0,0,0.25); }
+        #startClickerGameButton { background: linear-gradient(135deg, #4285F4 0%, #9B72F5 50%, #F472B6 100%); }
+        #startNumberGuessGameButton { background: linear-gradient(135deg, #34A853 0%, #FBBC05 50%, #F472B6 100%); }
+        #startColorTapChallengeButton { background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 50%, #ffcc80 100%); }
+        #getGameIdeaButton { 
+            background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+            font-size: 1rem; padding: 8px 18px; max-width: 250px;
+        }
+        #getDailyQuoteButton { /* 오늘의 명언 버튼 */
+             background: linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%);
+             font-size: 1rem; padding: 8px 18px; max-width: 250px; margin-top: 5px;
+        }
+        #quoteDisplay, #gameIdeaDisplay { /* 공통 디스플레이 영역 */
+            margin-top: 12px; padding: 10px; background-color: rgba(0,0,0,0.1);
+            border-radius: 8px; font-size: 0.9rem; color: #e0e0e0; min-height: 30px;
+            text-align: left;
+        }
+
+
+        .taskbar {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background-color: rgba(0,0,0,0.2); padding: 12px 0; text-align: center;
+            font-size: 0.9rem; color: #e5e7eb; border-top: 1px solid rgba(255,255,255,0.15); 
+            backdrop-filter: blur(5px); cursor: default; 
+        }
+
+        /* --- 클릭 마스터 게임 화면 스타일 --- */
+        #clickerGameScreen { background: linear-gradient(135deg, #b0bec5 0%, #78909c 100%); }
+        .game-container { 
+            background-color: rgba(255,255,255,0.35); backdrop-filter: blur(16px); border-radius: 28px; 
+            padding: 30px 40px 40px 40px; box-shadow: 0 25px 50px rgba(0,0,0,0.15), 
+            inset 0 1px 1px rgba(255,255,255,0.2), 0 0 0 1.5px rgba(255,255,255,0.25); 
+            text-align: center; width: 90%; max-width: 400px; position: relative; 
+        }
+        .score-label { font-size: 1.25rem; color: #1A202C; margin-bottom: 8px; font-weight: 500; }
+        .score-display {
+            font-size: 4.5rem; font-weight: 900; color: #111827; 
+            margin-bottom: 24px; line-height: 1;
+            transition: transform 0.2s ease, color 0.3s ease, text-shadow 0.3s ease; position: relative; 
+        }
+        .burning-effect { color: #ffcc00; animation: burningText 1.5s infinite alternate, glow 1.5s infinite alternate; }
+        @keyframes burningText { 
+            0% { text-shadow: 0 0 5px #fff,0 0 10px #fff,0 0 15px #fff,0 0 20px #ff8c00,0 0 35px #ff8c00,0 0 40px #ff8c00,0 0 50px #ff4500,0 0 75px #ff4500; }
+            50% { text-shadow: 0 0 10px #fff,0 0 15px #fff,0 0 20px #ffae42,0 0 30px #ffae42,0 0 40px #ffae42,0 0 50px #ff7700,0 0 60px #ff7700; }
+            100% { text-shadow: 0 0 5px #fff,0 0 10px #fff,0 0 15px #ff8c00,0 0 25px #ff8c00,0 0 30px #ff8c00,0 0 40px #ff4500,0 0 55px #ff4500; }
+        }
+        @keyframes glow { from { opacity: 0.8; } to { opacity: 1; } }
+        .click-button { 
+            background: linear-gradient(135deg, #4285F4 0%, #9B72F5 25%, #F472B6 50%, #FBBC05 75%, #34A853 100%);
+            color: white; font-size: 1.5rem; font-weight: 600; padding: 20px 30px; 
+            border: none; border-radius: 16px; cursor: pointer; transition: all 0.2s ease-out; 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2); outline: none; background-size: 200% 200%; 
+            animation: rainbowMove 4s ease infinite; -webkit-tap-highlight-color: transparent; 
+        }
+        @keyframes rainbowMove { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        .click-button:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 14px 28px rgba(0,0,0,0.25); }
+        .click-button:active { transform: translateY(1px) scale(0.96); box-shadow: 0 4px 8px rgba(0,0,0,0.25); }
+        .plus-one-animation {
+            position: absolute; font-size: 1.75rem; font-weight: bold;
+            background: linear-gradient(135deg, #4285F4, #9B72F5, #F472B6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; text-fill-color: transparent;
+            opacity: 0; animation: floatUpFadeOut 0.9s ease-out forwards; pointer-events: none; 
+        }
+        @keyframes floatUpFadeOut { 0% { opacity:1;transform:translateY(0) scale(0.7); } 100% { opacity:0;transform:translateY(-70px) scale(1.3); } }
+        .title { font-size: 2.1rem; font-weight: 700; color: #111827; margin-bottom: 24px; }
+        .lucky-message {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            font-size: 2rem; font-weight: bold; color: #FFD700; text-shadow: 0 0 10px #000;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .lucky-message.show { opacity: 1; transform: translate(-50%, -50%) scale(1.1); animation: luckyPulse 0.6s 2 alternate; }
+        @keyframes luckyPulse { to { transform: translate(-50%, -50%) scale(1.2); } }
+        .game-controls { margin-top: 25px; display: flex; gap: 15px; justify-content: center; }
+        .control-button { 
+            color: #f8f9fa; font-size: 0.9rem; font-weight: 500; padding: 10px 20px; 
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease; outline: none;
+        }
+        .control-button:active { transform: scale(0.95); }
+        #clickerResetButton { background-color: rgba(239,83,80,0.7); } 
+        #clickerResetButton:hover { background-color: rgba(229,57,53,0.8); }
+        #clickerGoHomeButton, #ngGoHomeButton, #ctcGoHomeButton { background-color: rgba(76,175,80,0.7); } 
+        #clickerGoHomeButton:hover, #ngGoHomeButton:hover, #ctcGoHomeButton:hover { background-color: rgba(67,160,71,0.8); }
+
+        /* --- 숫자 맞추기 게임 스타일 --- */
+        #numberGuessGameScreen { background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%); }
+        .number-guess-container { 
+            background-color: rgba(255, 255, 255, 0.35); backdrop-filter: blur(16px); border-radius: 28px; 
+            padding: 30px 40px 40px 40px; box-shadow: 0 25px 50px rgba(0,0,0,0.15), 
+            inset 0 1px 1px rgba(255,255,255,0.2), 0 0 0 1.5px rgba(255,255,255,0.25); 
+            text-align: center; width: 90%; max-width: 400px; color: #1A202C;
+        }
+        .number-guess-container h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 15px; }
+        .number-guess-container p { margin-bottom: 15px; font-size: 1rem; color: #374151; }
+        .number-guess-container input[type="number"] {
+            width: 80%; padding: 10px; margin-bottom: 15px; border: 1px solid rgba(0,0,0,0.2);
+            border-radius: 8px; font-size: 1.1rem; text-align: center; background-color: rgba(255,255,255,0.7); color: #1A202C;
+        }
+        .number-guess-container .guess-button { 
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white;
+            font-size: 1.1rem; font-weight: 600; padding: 10px 25px; border: none;
+            border-radius: 12px; cursor: pointer; transition: all 0.2s ease-out;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2); margin-bottom: 10px; 
+        }
+        .number-guess-container .guess-button:hover { transform: scale(1.05); }
+        
+        .number-guess-container .hint-button { 
+            background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+            color: white; font-size: 0.9rem; font-weight: 500; padding: 8px 18px; 
+            border: none; border-radius: 10px; cursor: pointer; transition: all 0.2s ease-out;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15); margin-bottom: 15px;
+        }
+        .number-guess-container .hint-button:hover { transform: scale(1.05); }
+        .number-guess-container .hint-button:disabled { background: #ccc; cursor: not-allowed; opacity: 0.7;}
+
+
+        .number-guess-container .feedback-message { min-height: 24px; margin-bottom: 10px; font-weight: 500; font-size: 1.1rem; }
+        .number-guess-container .attempts-display { font-size: 0.9rem; color: #4A5568; margin-bottom: 20px; }
+        .ng-controls { margin-top: 15px; display: flex; gap: 15px; justify-content: center; }
+        #ngNewGameButton { background-color: rgba(255,167,38,0.8); } 
+        #ngNewGameButton:hover { background-color: rgba(251,140,0,0.9); }
+
+        /* --- 컬러 탭 챌린지 게임 스타일 --- */
+        #colorTapChallengeScreen { background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%); }
+        .color-tap-container { 
+            background-color: rgba(255, 255, 255, 0.35); 
+            backdrop-filter: blur(16px); 
+            border-radius: 28px; 
+            padding: 20px; 
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15), 
+                        inset 0 1px 1px rgba(255, 255, 255, 0.2), 
+                        0 0 0 1.5px rgba(255, 255, 255, 0.25); 
+            text-align: center;
+            width: 90%; 
+            max-width: 380px; 
+            color: #1A202C;
+        }
+        .color-tap-container h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; } 
+        .color-tap-container #ctcTargetColorText { font-size: 1.1rem; font-weight: 600; margin-bottom: 12px; min-height: 18px;} 
+        .ctc-info-bar { 
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        #ctcStageDisplay { /* 스테이지 표시 스타일 */
+            font-weight: 600;
+            color: #374151;
+        }
+        .ctc-grid {
+            display: grid;
+            /* grid-template-columns는 JS에서 동적으로 설정 */
+            gap: 8px; 
+            /* width, height는 JS에서 동적으로 설정 */
+            margin: 0 auto 15px auto; 
+        }
+        .ctc-tile {
+            border-radius: 10px; 
+            cursor: pointer;
+            transition: transform 0.1s ease, opacity 0.3s ease, box-shadow 0.2s ease;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            /* 타일 크기는 JS에서 설정 */
+        }
+        .ctc-tile:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.15);
+        }
+        .ctc-tile.found {
+            opacity: 0.3;
+            cursor: default;
+            transform: scale(0.9);
+        }
+        .ctc-message {
+            min-height: 22px; 
+            margin-bottom: 12px; 
+            font-weight: 500;
+            font-size: 1rem; 
+        }
+        .ctc-controls { margin-top: 10px; display: flex; gap: 10px; justify-content: center; } 
+        #ctcNewGameButton { background-color: rgba(255, 167, 38, 0.8); } 
+        #ctcNewGameButton:hover { background-color: rgba(251, 140, 0, 0.9); }
+
+    </style>
+</head>
+<body>
+    <div id="nicknameSetupScreen" class="screen">
+        <div class="setup-container">
+            <div class="setup-logo">🚀</div>
+            <h1 class="setup-welcome">환영합니다! 닉네임을 설정해주세요.</h1>
+            <input type="text" id="nicknameInput" placeholder="닉네임 입력 (최대 10자)" maxlength="10">
+            <div class="nickname-buttons-container">
+                <button id="confirmNicknameButton">시작하기</button>
+                <button id="suggestNicknameButton">✨ 닉네임 추천받기</button>
+            </div>
+            <div id="nicknameSuggestions" class="nickname-suggestions-container"></div>
+            <div id="nicknameLoading" class="loading-indicator">닉네임 추천 중...</div>
+        </div>
+    </div>
+
+    <div id="homeScreen" class="screen">
+        <div class="home-content">
+            <h1 id="homeAppTitle" class="app-title">게임즈</h1> 
+            <p class="app-subtitle">다양한 미니게임을 즐겨보세요!</p>
+            <div class="game-selection-buttons">
+                <button id="startClickerGameButton" class="game-select-button">클릭 마스터</button>
+                <button id="startNumberGuessGameButton" class="game-select-button">숫자 맞추기</button>
+                <button id="startColorTapChallengeButton" class="game-select-button">컬러 탭 챌린지</button>
+                <button id="getGameIdeaButton" class="game-select-button">✨ 새 게임 아이디어</button>
+                <button id="getDailyQuoteButton" class="game-select-button">✨ 오늘의 명언</button>
+            </div>
+            <div id="gameIdeaDisplay" class="loading-indicator" style="text-align: left;">아이디어 구상 중...</div>
+            <div id="quoteDisplay" class="loading-indicator" style="text-align: left;">명언 로딩 중...</div>
+        </div>
+        <div class="taskbar" id="taskbar"> 
+            <span id="taskbarNickname">플레이어</span><span> - 멀티 게임 에디션 v3.1</span>
+        </div>
+    </div>
+
+    <div id="clickerGameScreen" class="screen"> 
+        <div class="game-container" id="clickerGameContainer"> 
+            <h1 class="title">클릭 마스터</h1>
+            <div class="score-label">현재 점수</div>
+            <div id="clickerScoreDisplay" class="score-display"> 
+                0
+                <div id="clickerLuckyMessage" class="lucky-message">LUCKY!</div> 
+            </div>
+            <button id="clickButton" class="click-button">클릭하세요!</button>
+        </div>
+        <div class="game-controls">
+            <button id="clickerResetButton" class="control-button">점수 초기화</button> 
+            <button id="clickerGoHomeButton" class="control-button">홈으로</button> 
+        </div>
+    </div>
+
+    <div id="numberGuessGameScreen" class="screen">
+        <div class="number-guess-container">
+            <h2>숫자 맞추기 게임</h2>
+            <p>1부터 100 사이의 숫자를 맞춰보세요!</p>
+            <input type="number" id="ngGuessInput" min="1" max="100" placeholder="숫자 입력">
+            <button id="ngSubmitGuessButton" class="guess-button">추측하기!</button>
+            <button id="ngHintButton" class="hint-button" disabled>✨ 힌트 보기 (3회 시도 후)</button>
+            <div id="ngFeedbackMessage" class="feedback-message"></div>
+            <div id="ngAttemptsDisplay" class="attempts-display">시도 횟수: 0</div>
+             <div id="ngHintLoading" class="loading-indicator">힌트 생성 중...</div>
+            <div class="ng-controls">
+                <button id="ngNewGameButton" class="control-button">새 게임</button>
+                <button id="ngGoHomeButton" class="control-button">홈으로</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="colorTapChallengeScreen" class="screen">
+        <div class="color-tap-container">
+            <h2>컬러 탭 챌린지</h2>
+            <div class="ctc-info-bar">
+                <span id="ctcStageDisplay">스테이지: 1</span>
+                <span id="ctcTimerDisplay">시간: 10</span>
+                <span id="ctcScoreDisplay">점수: 0</span>
+            </div>
+            <div id="ctcTargetColorText">목표 색상: -</div>
+            <div id="ctcGrid" class="ctc-grid"></div>
+            <div id="ctcMessage" class="ctc-message"></div>
+            <div id="ctcHighScoreDisplay" style="font-size: 0.9rem; margin-bottom: 10px;">최고 점수: 0</div>
+            <div class="ctc-controls">
+                <button id="ctcNewGameButton" class="control-button">새 게임</button>
+                <button id="ctcGoHomeButton" class="control-button">홈으로</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- 공통 요소 ---
+        const nicknameSetupScreen = document.getElementById('nicknameSetupScreen');
+        const nicknameInput = document.getElementById('nicknameInput');
+        const confirmNicknameButton = document.getElementById('confirmNicknameButton');
+        const suggestNicknameButton = document.getElementById('suggestNicknameButton');
+        const nicknameSuggestionsContainer = document.getElementById('nicknameSuggestions');
+        const nicknameLoading = document.getElementById('nicknameLoading');
+
+        const homeScreen = document.getElementById('homeScreen');
+        const homeAppTitle = document.getElementById('homeAppTitle');
+        const taskbar = document.getElementById('taskbar'); 
+        const taskbarNickname = document.getElementById('taskbarNickname');
+        const getGameIdeaButton = document.getElementById('getGameIdeaButton');
+        const gameIdeaDisplay = document.getElementById('gameIdeaDisplay');
+        const getDailyQuoteButton = document.getElementById('getDailyQuoteButton');
+        const quoteDisplay = document.getElementById('quoteDisplay');
+        
+        // --- 클릭 마스터 게임 요소 ---
+        const clickerGameScreen = document.getElementById('clickerGameScreen'); 
+        const startClickerGameButton = document.getElementById('startClickerGameButton');
+        const clickerScoreDisplay = document.getElementById('clickerScoreDisplay'); 
+        const clickButton = document.getElementById('clickButton');
+        const clickerGameContainer = document.getElementById('clickerGameContainer'); 
+        const clickerLuckyMessage = document.getElementById('clickerLuckyMessage'); 
+        const clickerResetButton = document.getElementById('clickerResetButton'); 
+        const clickerGoHomeButton = document.getElementById('clickerGoHomeButton'); 
+
+        let clickerScore = 0;
+        const CLICKER_BURNING_THRESHOLD = 1000; 
+        let clickerDeveloperBurningActive = false;
+        const CLICKER_LUCKY_SCORE = 777;
+        let clickerEasterEggsEnabled = true; 
+
+        // --- 숫자 맞추기 게임 요소 ---
+        const numberGuessGameScreen = document.getElementById('numberGuessGameScreen');
+        const startNumberGuessGameButton = document.getElementById('startNumberGuessGameButton');
+        const ngGuessInput = document.getElementById('ngGuessInput');
+        const ngSubmitGuessButton = document.getElementById('ngSubmitGuessButton');
+        const ngHintButton = document.getElementById('ngHintButton');
+        const ngFeedbackMessage = document.getElementById('ngFeedbackMessage');
+        const ngAttemptsDisplay = document.getElementById('ngAttemptsDisplay');
+        const ngHintLoading = document.getElementById('ngHintLoading');
+        const ngNewGameButton = document.getElementById('ngNewGameButton');
+        const ngGoHomeButton = document.getElementById('ngGoHomeButton');
+
+        let ngTargetNumber;
+        let ngAttempts;
+        const NG_HINT_ATTEMPT_THRESHOLD = 3; 
+
+        // --- 컬러 탭 챌린지 게임 요소 ---
+        const colorTapChallengeScreen = document.getElementById('colorTapChallengeScreen');
+        const startColorTapChallengeButton = document.getElementById('startColorTapChallengeButton');
+        const ctcTargetColorText = document.getElementById('ctcTargetColorText');
+        const ctcGrid = document.getElementById('ctcGrid');
+        const ctcMessage = document.getElementById('ctcMessage');
+        const ctcTimerDisplay = document.getElementById('ctcTimerDisplay');
+        const ctcScoreDisplay = document.getElementById('ctcScoreDisplay');
+        const ctcStageDisplay = document.getElementById('ctcStageDisplay');
+        const ctcHighScoreDisplay = document.getElementById('ctcHighScoreDisplay');
+        const ctcNewGameButton = document.getElementById('ctcNewGameButton');
+        const ctcGoHomeButton = document.getElementById('ctcGoHomeButton');
+
+        const CTC_COLORS = {
+            red: { name: '빨간색', value: '#EF5350' },
+            blue: { name: '파란색', value: '#42A5F5' },
+            green: { name: '초록색', value: '#66BB6A' },
+            yellow: { name: '노란색', value: '#FFEE58' },
+            purple: { name: '보라색', value: '#AB47BC' },
+            orange: { name: '주황색', value: '#FFA726'},
+            pink: { name: '분홍색', value: '#EC407A'},
+            teal: { name: '청록색', value: '#26A69A'}
+        };
+        const CTC_COLOR_KEYS = Object.keys(CTC_COLORS);
+        let ctcCurrentTargetColor;
+        let ctcTargetTilesCount;
+        let ctcFoundTilesCount;
+        let ctcTimerInterval;
+        let ctcTimeLeft;
+        let ctcCurrentScore;
+        let ctcHighScore = 0;
+        let ctcCurrentStage = 1;
+        const CTC_INITIAL_TIME_LIMIT = 10; // 초기 시간 제한
+        const CTC_GRID_CONFIGS = [ // 스테이지별 그리드 설정
+            { stage: 1, rows: 3, cols: 3, time: 10 }, // 3x3, 10초
+            { stage: 2, rows: 3, cols: 3, time: 9 },
+            { stage: 3, rows: 3, cols: 4, time: 12 }, // 3x4, 12초
+            { stage: 4, rows: 3, cols: 4, time: 11 },
+            { stage: 5, rows: 4, cols: 4, time: 15 }, // 4x4, 15초
+            { stage: 6, rows: 4, cols: 4, time: 13 },
+            { stage: 7, rows: 4, cols: 5, time: 18 }, // 4x5, 18초
+            { stage: 8, rows: 4, cols: 5, time: 16 },
+            { stage: 9, rows: 5, cols: 5, time: 20 }, // 5x5, 20초
+            { stage: 10, rows: 5, cols: 5, time: 18 } // 최종 스테이지
+        ];
+
+
+        // --- 개발자 설정 관련 변수 ---
+        let typedAdminSequence = ""; 
+        const ADMIN_KEY_SEQUENCE = "admin";
+
+
+        let userNickname = '';
+
+        // --- Gemini API 관련 ---
+        const GEMINI_API_KEY = ""; 
+
+        async function callGeminiAPI(prompt) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: prompt }] }]
+            };
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("Gemini API Error:", errorData);
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error?.message || 'Unknown error'}`);
+                }
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    return result.candidates[0].content.parts[0].text;
+                } else {
+                    console.error("Gemini API Error: Unexpected response structure", result);
+                    throw new Error("예상치 못한 응답 구조입니다.");
+                }
+            } catch (error) {
+                console.error("Gemini API 호출 중 오류 발생:", error);
+                return null; 
+            }
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            const nextScreen = document.getElementById(screenId);
+            if (nextScreen) {
+                nextScreen.classList.add('active');
+            }
+        }
+
+        function loadNickname() {
+            const savedNickname = localStorage.getItem('userNickname');
+            if (savedNickname) {
+                userNickname = savedNickname;
+                updateUIWithNickname();
+                showScreen('homeScreen');
+            } else {
+                showScreen('nicknameSetupScreen');
+            }
+        }
+
+        function saveNickname(nickname) {
+            localStorage.setItem('userNickname', nickname);
+            userNickname = nickname;
+            updateUIWithNickname();
+        }
+
+        function updateUIWithNickname() {
+            homeAppTitle.textContent = `${userNickname}님, 환영합니다!`;
+            taskbarNickname.textContent = userNickname;
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNickname(); 
+            initializeClickerGame(); 
+            loadCTCHighScore();
+            
+            confirmNicknameButton.addEventListener('click', () => {
+                const nickname = nicknameInput.value.trim();
+                if (nickname) {
+                    saveNickname(nickname);
+                    showScreen('homeScreen');
+                } else {
+                    nicknameInput.focus();
+                    nicknameInput.style.border = '2px solid red';
+                    setTimeout(() => { nicknameInput.style.border = 'none'; }, 2000);
+                }
+            });
+            nicknameInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    confirmNicknameButton.click();
+                }
+            });
+
+            suggestNicknameButton.addEventListener('click', async () => {
+                nicknameLoading.style.display = 'block';
+                nicknameSuggestionsContainer.innerHTML = '';
+                const prompt = "재미있고 독특한 게임 닉네임 3개를 추천해줘. 각 닉네임은 한글 또는 영어로, 짧고 기억하기 쉬운 것으로 해줘. 숫자나 특수문자는 사용하지 말아줘. 예시: 슈퍼토끼, CosmicDrifter, 번개손";
+                try {
+                    const suggestionsText = await callGeminiAPI(prompt);
+                    if (suggestionsText) {
+                        const suggestions = suggestionsText.split('\n').map(s => s.replace(/^[0-9]+\.\s*/, '').trim()).filter(s => s.length > 0 && s.length <= 10);
+                        if (suggestions.length > 0) {
+                            suggestions.slice(0, 3).forEach(suggestion => { 
+                                const btn = document.createElement('button');
+                                btn.textContent = suggestion;
+                                btn.onclick = () => {
+                                    nicknameInput.value = suggestion;
+                                };
+                                nicknameSuggestionsContainer.appendChild(btn);
+                            });
+                        } else {
+                            nicknameSuggestionsContainer.textContent = '추천 닉네임을 가져오지 못했어요. 직접 입력해주세요.';
+                        }
+                    } else {
+                        nicknameSuggestionsContainer.textContent = '닉네임 추천 중 오류가 발생했어요.';
+                    }
+                } catch (error) {
+                     nicknameSuggestionsContainer.textContent = '닉네임 추천 중 오류가 발생했어요.';
+                } finally {
+                    nicknameLoading.style.display = 'none';
+                }
+            });
+
+            let clickerActiveTouches = 0;
+            clickButton.addEventListener('touchstart', (event) => {
+                if (!clickerGameScreen.classList.contains('active')) return; 
+                clickerActiveTouches = event.touches.length;
+                if (clickerActiveTouches === 3) { 
+                    event.preventDefault(); 
+                    clickerDeveloperBurningActive = !clickerDeveloperBurningActive; 
+                    updateClickerScoreDisplay(); 
+                    console.log(`클릭 마스터 개발자: 버닝 효과 ${clickerDeveloperBurningActive ? '강제 활성화' : '강제 비활성화'}`);
+                } 
+            });
+            clickButton.addEventListener('touchend', (event) => { if (clickerGameScreen.classList.contains('active')) clickerActiveTouches = event.touches.length; });
+            clickButton.addEventListener('touchcancel', (event) => { if (clickerGameScreen.classList.contains('active')) clickerActiveTouches = event.touches.length; });
+        
+            startClickerGameButton.addEventListener('click', () => {
+                initializeClickerGame(); 
+                showScreen('clickerGameScreen');
+            });
+            startNumberGuessGameButton.addEventListener('click', () => {
+                initializeNumberGuessGame();
+                showScreen('numberGuessGameScreen');
+            });
+            startColorTapChallengeButton.addEventListener('click', () => {
+                initializeColorTapChallengeGame();
+                showScreen('colorTapChallengeScreen');
+            });
+            getGameIdeaButton.addEventListener('click', async () => {
+                gameIdeaDisplay.classList.remove('loading-indicator'); 
+                gameIdeaDisplay.textContent = '새로운 게임 아이디어 구상 중...';
+                gameIdeaDisplay.style.display = 'block';
+                quoteDisplay.style.display = 'none'; // 명언 숨기기
+                const prompt = "간단하고 재미있는 웹 브라우저 미니게임 아이디어를 하나 제안하고, 그 게임의 핵심 규칙을 한두 문장으로 설명해줘.";
+                try {
+                    const idea = await callGeminiAPI(prompt);
+                    if (idea) {
+                        gameIdeaDisplay.textContent = `✨ 추천 게임 아이디어: ${idea}`;
+                    } else {
+                        gameIdeaDisplay.textContent = '아이디어를 가져오는 데 실패했어요. 다시 시도해주세요.';
+                    }
+                } catch (error) {
+                    gameIdeaDisplay.textContent = '아이디어 생성 중 오류 발생.';
+                }
+            });
+             getDailyQuoteButton.addEventListener('click', async () => {
+                quoteDisplay.classList.remove('loading-indicator');
+                quoteDisplay.textContent = '오늘의 명언 로딩 중...';
+                quoteDisplay.style.display = 'block';
+                gameIdeaDisplay.style.display = 'none'; // 게임 아이디어 숨기기
+                const prompt = "짧고 영감을 주는 오늘의 명언 한마디를 추천해줘. (한글 또는 영어)";
+                try {
+                    const quote = await callGeminiAPI(prompt);
+                    if (quote) {
+                        quoteDisplay.textContent = `✨ 오늘의 명언: "${quote}"`;
+                    } else {
+                        quoteDisplay.textContent = '명언을 가져오는 데 실패했어요. 다시 시도해주세요.';
+                    }
+                } catch (error) {
+                    quoteDisplay.textContent = '명언 생성 중 오류 발생.';
+                }
+            });
+
+
+            clickerResetButton.addEventListener('click', () => {
+                console.log("클릭 마스터 리셋!");
+                initializeClickerGame();
+            });
+            clickerGoHomeButton.addEventListener('click', () => {
+                showScreen('homeScreen');
+            });
+            clickButton.addEventListener('click', handleRegularClick); 
+
+            ngSubmitGuessButton.addEventListener('click', handleNumberGuess);
+            ngGuessInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    handleNumberGuess();
+                }
+            });
+            ngNewGameButton.addEventListener('click', initializeNumberGuessGame);
+            ngGoHomeButton.addEventListener('click', () => {
+                showScreen('homeScreen');
+            });
+            ngHintButton.addEventListener('click', async () => {
+                ngHintLoading.style.display = 'block';
+                ngHintButton.disabled = true;
+                const prompt = `1부터 100 사이의 숫자 맞추기 게임의 정답은 ${ngTargetNumber}입니다. 이 숫자에 대한 창의적이고 간접적인 힌트를 하나만 짧게 제공해주세요. 직접적으로 숫자를 언급하거나 계산을 유도하지 마세요. 예를 들어 정답이 25라면 "이 숫자는 어떤 숫자의 제곱수이고, 동전 이름과도 관련이 있어요." 와 같이 말해주세요.`;
+                try {
+                    const hint = await callGeminiAPI(prompt);
+                    if (hint) {
+                        ngFeedbackMessage.textContent = `✨ 힌트: ${hint}`;
+                        ngFeedbackMessage.style.color = '#007bff'; 
+                    } else {
+                        ngFeedbackMessage.textContent = '힌트를 가져오는 데 실패했어요.';
+                        ngFeedbackMessage.style.color = 'red';
+                        ngHintButton.disabled = false; 
+                    }
+                } catch (error) {
+                    ngFeedbackMessage.textContent = '힌트 생성 중 오류 발생.';
+                    ngFeedbackMessage.style.color = 'red';
+                    ngHintButton.disabled = false;
+                } finally {
+                    ngHintLoading.style.display = 'none';
+                }
+            });
+
+            ctcNewGameButton.addEventListener('click', initializeColorTapChallengeGame);
+            ctcGoHomeButton.addEventListener('click', () => {
+                showScreen('homeScreen');
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.target === nicknameInput || event.target === ngGuessInput) {
+                    typedAdminSequence = ""; 
+                    return;
+                }
+                typedAdminSequence += event.key.toLowerCase();
+                if (typedAdminSequence.length > ADMIN_KEY_SEQUENCE.length) {
+                    typedAdminSequence = typedAdminSequence.slice(-ADMIN_KEY_SEQUENCE.length);
+                }
+                if (typedAdminSequence === ADMIN_KEY_SEQUENCE) {
+                    clickerEasterEggsEnabled = !clickerEasterEggsEnabled;
+                    console.log(`개발자 기능 (키보드 'admin'): 클릭 마스터 이스터에그 ${clickerEasterEggsEnabled ? '활성화됨' : '비활성화됨'}`);
+                    if (!clickerEasterEggsEnabled && clickerLuckyMessage.classList.contains('show')) {
+                        clickerLuckyMessage.classList.remove('show');
+                        if (!clickerScoreDisplay.classList.contains('burning-effect')) {
+                            clickerScoreDisplay.style.color = '#111827'; 
+                        } else {
+                            clickerScoreDisplay.style.color = '#ffcc00'; 
+                        }
+                    }
+                    typedAdminSequence = ""; 
+                }
+            });
+        });
+        
+        function initializeClickerGame() {
+            clickerScore = 0;
+            clickerDeveloperBurningActive = false; 
+            updateClickerScoreDisplay();
+            if(clickerLuckyMessage.classList.contains('show')) {
+                clickerLuckyMessage.classList.remove('show');
+                if (!clickerScoreDisplay.classList.contains('burning-effect')) {
+                     clickerScoreDisplay.style.color = '#111827'; 
+                } else {
+                     clickerScoreDisplay.style.color = '#ffcc00';
+                }
+            }
+        }
+        
+        function handleRegularClick(event) { 
+            if (event.touches && event.touches.length > 1) { 
+                return;
+            }
+            clickerScore += 1; 
+            updateClickerScoreDisplay();
+            animateClickerScore(); 
+            showClickerPlusAnimation(event); 
+            checkClickerEasterEggs();
+        }
+
+        function updateClickerScoreDisplay() {
+            clickerScoreDisplay.firstChild.textContent = clickerScore; 
+            if (clickerDeveloperBurningActive) {
+                clickerScoreDisplay.classList.add('burning-effect');
+            } else {
+                if (clickerScore >= CLICKER_BURNING_THRESHOLD) {
+                    clickerScoreDisplay.classList.add('burning-effect');
+                } else {
+                    clickerScoreDisplay.classList.remove('burning-effect');
+                }
+            }
+        }
+
+        function animateClickerScore() {
+            clickerScoreDisplay.style.transform = 'scale(1.12)'; 
+            setTimeout(() => {
+                clickerScoreDisplay.style.transform = 'scale(1)';
+            }, 120); 
+        }
+
+        function showClickerPlusAnimation(event) { 
+            const plusAnim = document.createElement('div');
+            plusAnim.textContent = `+1`; 
+            plusAnim.classList.add('plus-one-animation'); 
+            
+            const gameRect = clickerGameContainer.getBoundingClientRect(); 
+            const buttonRect = clickButton.getBoundingClientRect();
+            
+            const y = (buttonRect.top - gameRect.top) - 15; 
+
+            plusAnim.style.left = `${buttonRect.left + buttonRect.width / 2 - gameRect.left}px`; 
+            plusAnim.style.top = `${y}px`;
+            
+            clickerGameContainer.appendChild(plusAnim); 
+
+            plusAnim.addEventListener('animationend', () => {
+                plusAnim.remove();
+            });
+        }
+
+        function checkClickerEasterEggs() {
+            if (!clickerEasterEggsEnabled) {
+                if (clickerLuckyMessage.classList.contains('show')) {
+                    clickerLuckyMessage.classList.remove('show');
+                    if (!clickerScoreDisplay.classList.contains('burning-effect')) {
+                        clickerScoreDisplay.style.color = '#111827'; 
+                    } else {
+                        clickerScoreDisplay.style.color = '#ffcc00';
+                    }
+                }
+                return;
+            }
+
+            if (clickerScore === CLICKER_LUCKY_SCORE && !clickerLuckyMessage.classList.contains('show')) {
+                clickerScoreDisplay.style.color = '#FFD700'; 
+                clickerLuckyMessage.classList.add('show');
+                
+                setTimeout(() => {
+                    clickerLuckyMessage.classList.remove('show');
+                    if (!clickerScoreDisplay.classList.contains('burning-effect')) {
+                         clickerScoreDisplay.style.color = '#111827'; 
+                    } else {
+                        clickerScoreDisplay.style.color = '#ffcc00'; 
+                    }
+                }, 2000); 
+            }
+        }
+
+        function initializeNumberGuessGame() {
+            ngTargetNumber = Math.floor(Math.random() * 100) + 1;
+            ngAttempts = 0;
+            ngFeedbackMessage.textContent = '';
+            ngAttemptsDisplay.textContent = '시도 횟수: 0';
+            ngGuessInput.value = '';
+            ngGuessInput.disabled = false;
+            ngSubmitGuessButton.disabled = false;
+            ngHintButton.disabled = true; 
+            ngFeedbackMessage.style.color = '#1A202C'; 
+            console.log(`숫자 맞추기 게임 시작! 정답: ${ngTargetNumber}`); 
+        }
+
+        function handleNumberGuess() {
+            const userGuess = parseInt(ngGuessInput.value);
+            if (isNaN(userGuess) || userGuess < 1 || userGuess > 100) {
+                ngFeedbackMessage.textContent = '1부터 100 사이의 숫자를 입력하세요.';
+                ngFeedbackMessage.style.color = 'red';
+                return;
+            }
+
+            ngAttempts++;
+            ngAttemptsDisplay.textContent = `시도 횟수: ${ngAttempts}`;
+            ngFeedbackMessage.style.color = '#1A202C'; 
+
+            if (userGuess < ngTargetNumber) {
+                ngFeedbackMessage.textContent = '너무 낮아요! 다시 시도하세요.';
+            } else if (userGuess > ngTargetNumber) {
+                ngFeedbackMessage.textContent = '너무 높아요! 다시 시도하세요.';
+            } else {
+                ngFeedbackMessage.textContent = `정답입니다! ${ngAttempts}번 만에 맞추셨어요!`;
+                ngFeedbackMessage.style.color = 'green';
+                ngGuessInput.disabled = true;
+                ngSubmitGuessButton.disabled = true;
+                ngHintButton.disabled = true;
+            }
+            ngGuessInput.value = ''; 
+            ngGuessInput.focus(); 
+
+            if (ngAttempts >= NG_HINT_ATTEMPT_THRESHOLD && !ngSubmitGuessButton.disabled) {
+                ngHintButton.disabled = false;
+            }
+        }
+
+        // --- 컬러 탭 챌린지 게임 함수 ---
+        function initializeColorTapChallengeGame() {
+            ctcCurrentScore = 0;
+            ctcCurrentStage = 1;
+            updateCTCScoreDisplay();
+            updateCTCStageDisplay();
+            ctcMessage.textContent = '';
+            loadCTCHighScore();
+            setupNewColorTapRound();
+        }
+
+        function loadCTCHighScore() {
+            const savedHighScore = localStorage.getItem('ctcHighScore');
+            if (savedHighScore) {
+                ctcHighScore = parseInt(savedHighScore, 10);
+            }
+            ctcHighScoreDisplay.textContent = `최고 점수: ${ctcHighScore}`;
+        }
+
+        function saveCTCHighScore() {
+            if (ctcCurrentScore > ctcHighScore) {
+                ctcHighScore = ctcCurrentScore;
+                localStorage.setItem('ctcHighScore', ctcHighScore);
+                ctcHighScoreDisplay.textContent = `최고 점수: ${ctcHighScore}`;
+            }
+        }
+        
+        function updateCTCScoreDisplay() {
+            ctcScoreDisplay.textContent = `점수: ${ctcCurrentScore}`;
+        }
+        function updateCTCStageDisplay() {
+            ctcStageDisplay.textContent = `스테이지: ${ctcCurrentStage}`;
+        }
+
+
+        function startCTCTimer() {
+            const currentStageConfig = CTC_GRID_CONFIGS[Math.min(ctcCurrentStage -1, CTC_GRID_CONFIGS.length -1)];
+            ctcTimeLeft = currentStageConfig.time;
+
+            ctcTimerDisplay.textContent = `시간: ${ctcTimeLeft}`;
+            clearInterval(ctcTimerInterval); 
+            ctcTimerInterval = setInterval(() => {
+                ctcTimeLeft--;
+                ctcTimerDisplay.textContent = `시간: ${ctcTimeLeft}`;
+                if (ctcTimeLeft <= 0) {
+                    clearInterval(ctcTimerInterval);
+                    handleCTCTimeUp();
+                }
+            }, 1000);
+        }
+
+        function handleCTCTimeUp() {
+            ctcMessage.textContent = `시간 초과! 최종 점수: ${ctcCurrentScore}`;
+            ctcMessage.style.color = 'red';
+            ctcGrid.innerHTML = '<p style="grid-column: 1 / -1; align-self: center; font-weight: bold;">게임을 다시 시작하세요.</p>'; 
+            saveCTCHighScore();
+            // 모든 타일 클릭 비활성화
+            document.querySelectorAll('.ctc-tile').forEach(tile => tile.removeEventListener('click', handleColorTileTap));
+        }
+
+
+        function setupNewColorTapRound() {
+            ctcGrid.innerHTML = ''; 
+            const currentStageConfig = CTC_GRID_CONFIGS[Math.min(ctcCurrentStage -1, CTC_GRID_CONFIGS.length -1)];
+            const rows = currentStageConfig.rows;
+            const cols = currentStageConfig.cols;
+            const totalTiles = rows * cols;
+
+            ctcGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            ctcGrid.style.width = `${cols * 65 + (cols -1) * 8}px`; // 타일 크기 65px, 간격 8px 기준
+            ctcGrid.style.height = `${rows * 65 + (rows -1) * 8}px`;
+
+
+            const availableColors = [...CTC_COLOR_KEYS];
+            const targetColorKey = availableColors[Math.floor(Math.random() * availableColors.length)];
+            ctcCurrentTargetColor = CTC_COLORS[targetColorKey];
+            ctcTargetColorText.textContent = `목표 색상: ${ctcCurrentTargetColor.name}`;
+            ctcTargetColorText.style.color = ctcCurrentTargetColor.value; 
+            ctcTargetTilesCount = 0;
+            ctcFoundTilesCount = 0;
+            ctcMessage.textContent = `${ctcCurrentTargetColor.name} 타일을 모두 찾으세요!`;
+            ctcMessage.style.color = '#1A202C'; 
+
+            let tempTargetTiles = 0;
+            // 목표 타일 최소 개수 (그리드 크기에 따라 조절)
+            const minTargetTiles = Math.max(2, Math.floor(totalTiles / 5)); 
+            
+            while (tempTargetTiles < minTargetTiles) { 
+                ctcGrid.innerHTML = ''; 
+                tempTargetTiles = 0;
+                for (let i = 0; i < totalTiles; i++) {
+                    const tile = document.createElement('div');
+                    tile.classList.add('ctc-tile');
+                    tile.style.width = '65px'; // 타일 크기 고정
+                    tile.style.height = '65px';
+                    
+                    // 목표 타일 생성 확률 (그리드 크기에 따라 조절 가능)
+                    const isTarget = Math.random() < (minTargetTiles * 1.5 / totalTiles) ; // 목표 타일이 너무 적거나 많지 않도록 확률 조정
+                    let tileColorKey;
+                    if (isTarget) {
+                        tileColorKey = targetColorKey;
+                        tempTargetTiles++;
+                    } else {
+                        let randomColorKey = availableColors[Math.floor(Math.random() * availableColors.length)];
+                        while (randomColorKey === targetColorKey) { 
+                            randomColorKey = availableColors[Math.floor(Math.random() * availableColors.length)];
+                        }
+                        tileColorKey = randomColorKey;
+                    }
+                    
+                    tile.style.backgroundColor = CTC_COLORS[tileColorKey].value;
+                    tile.dataset.colorKey = tileColorKey; 
+
+                    tile.addEventListener('click', handleColorTileTap);
+                    ctcGrid.appendChild(tile);
+                }
+            }
+            ctcTargetTilesCount = tempTargetTiles; 
+            startCTCTimer(); 
+        }
+
+        function handleColorTileTap(event) {
+            if (ctcTimeLeft <= 0) return; 
+
+            const tappedTile = event.target;
+            if (tappedTile.classList.contains('found')) {
+                return; 
+            }
+
+            const tappedColorKey = tappedTile.dataset.colorKey;
+
+            if (tappedColorKey === ctcCurrentTargetColor.key || CTC_COLORS[tappedColorKey].value === ctcCurrentTargetColor.value) {
+                tappedTile.classList.add('found');
+                ctcFoundTilesCount++;
+                ctcCurrentScore += 10; 
+                updateCTCScoreDisplay();
+                ctcMessage.textContent = '정답입니다!';
+                ctcMessage.style.color = 'green';
+                tappedTile.style.border = `3px solid ${darkenColor(CTC_COLORS[tappedColorKey].value, 0.7)}`; 
+                tappedTile.style.transform = 'scale(0.9)';
+
+
+                if (ctcFoundTilesCount === ctcTargetTilesCount) {
+                    clearInterval(ctcTimerInterval); 
+                    ctcCurrentScore += Math.max(0, ctcTimeLeft * 2); // 남은 시간 보너스 점수
+                    updateCTCScoreDisplay();
+                    ctcMessage.textContent = '성공! 다음 스테이지로!';
+                    ctcMessage.style.color = 'blue';
+                    saveCTCHighScore(); 
+                    ctcCurrentStage++;
+                    updateCTCStageDisplay();
+                    setTimeout(setupNewColorTapRound, 1500); 
+                }
+            } else {
+                ctcMessage.textContent = '땡! 다른 색상입니다.';
+                ctcMessage.style.color = 'orange';
+                ctcCurrentScore -= 5; // 오답 시 감점
+                if (ctcCurrentScore < 0) ctcCurrentScore = 0;
+                updateCTCScoreDisplay();
+                tappedTile.animate([
+                    { transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' },
+                    { transform: 'translateX(-5px)' }, { transform: 'translateX(0px)' }
+                ], { duration: 300, iterations: 1 });
+            }
+        }
+        function darkenColor(hex, percent) {
+            hex = hex.replace(/^#/, '');
+            let r = parseInt(hex.substring(0, 2), 16);
+            let g = parseInt(hex.substring(2, 4), 16);
+            let b = parseInt(hex.substring(4, 6), 16);
+            r = Math.floor(r * (1 - percent));
+            g = Math.floor(g * (1 - percent));
+            b = Math.floor(b * (1 - percent));
+            return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
+        }
+        
+        function initializeColorTapChallengeGame() { 
+            ctcCurrentScore = 0; 
+            ctcCurrentStage = 1; // 스테이지 초기화
+            updateCTCScoreDisplay();
+            updateCTCStageDisplay(); // 스테이지 표시 업데이트
+            loadCTCHighScore(); 
+            ctcMessage.textContent = '';
+            setupNewColorTapRound();
+        }
+
+
+    </script>
+</body>
+</html>
